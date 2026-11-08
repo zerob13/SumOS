@@ -18,7 +18,8 @@ class ReleaseBundle(unittest.TestCase):
         for name in ['scripts', 'docs', 'live', 'assets', 'tests', '.github', 'dist', '.cache',
                      'build/iso/config/includes.chroot/opt/dim']:
             (self.root / name).mkdir(parents=True, exist_ok=True)
-        for name in ['README.md', 'LICENSE', 'Dockerfile', 'versions.json', 'docs/LICENSING.md', 'scripts/package-release.py']:
+        for name in ['README.md', 'LICENSE', 'Dockerfile', 'versions.json', 'docs/LICENSING.md',
+                     'scripts/package-release.py', 'scripts/checksums.py']:
             shutil.copy2(ROOT / name, self.root / name)
         work = self.root / 'build/iso'
         self.iso = work / 'fixture.hybrid.iso'
@@ -59,3 +60,25 @@ class ReleaseBundle(unittest.TestCase):
         (self.root / 'build/iso/fixture-source.debian.tar').unlink()
         with self.assertRaisesRegex(SystemExit, 'source archives are required'):
             self.package()
+
+    def test_empty_qemu_logs_are_preserved_in_uploadable_evidence_archive(self):
+        self.package()
+        out = self.root / 'dist'
+        (out / 'qemu-bios.log').write_bytes(b'')
+        (out / 'boot-bios.log').write_bytes(b'SUMOS_DESKTOP_READY\n')
+        (out / 'boot-bios.png').write_bytes(b'fixture screenshot bytes')
+        script = str(self.root / 'scripts/checksums.py')
+        runpy.run_path(script, run_name='__main__')
+        with tarfile.open(out / 'boot-tests.tar.gz') as archive:
+            self.assertEqual(archive.extractfile('qemu-bios.log').read(), b'')
+            self.assertEqual(archive.extractfile('boot-bios.log').read(), b'SUMOS_DESKTOP_READY\n')
+            self.assertEqual(archive.extractfile('boot-bios.png').read(), b'fixture screenshot bytes')
+        self.assertFalse((out / 'qemu-bios.log').exists())
+        self.assertEqual((out / 'sumos-amd64.iso').read_bytes(), self.iso.read_bytes())
+        checksums = (out / 'SHA256SUMS').read_bytes()
+        for line in checksums.decode().splitlines():
+            digest, name = line.split('  ', 1)
+            self.assertGreater((out / name).stat().st_size, 0)
+            self.assertEqual(hashlib.sha256((out / name).read_bytes()).hexdigest(), digest)
+        runpy.run_path(script, run_name='__main__')
+        self.assertEqual((out / 'SHA256SUMS').read_bytes(), checksums)
