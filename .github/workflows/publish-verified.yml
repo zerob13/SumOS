@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 3fb2934dff07ecf76328e1e601af3e47abdd2ce6
+          ref: ${{ github.sha }}
       - name: Require the exact successful master ISO workflow
         run: |
           gh api "repos/$GH_REPO/actions/runs/$VERIFIED_RUN" > /tmp/verified-run.json
@@ -68,6 +68,8 @@ jobs:
               raise SystemExit('Missing live-build sources')
           print('Manifest, version pins, source archives and checksums verified')
           PY
+          python3 scripts/checksums.py
+          (cd dist && sha256sum -c SHA256SUMS)
       - name: Stage every asset before publishing the prerelease
         run: |
           cat > /tmp/sumos-release-notes.md <<'NOTES'
@@ -85,9 +87,29 @@ jobs:
 
           NOTES
           cat docs/RELEASE_NOTES.md >> /tmp/sumos-release-notes.md
-          gh api "repos/$GH_REPO/git/refs" --method POST \
-            -f "ref=refs/tags/$RELEASE_TAG" -f "sha=$VERIFIED_SHA" > /dev/null
-          gh release create "$RELEASE_TAG" dist/* --verify-tag --draft --prerelease \
+          actual_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')
+          [[ "$actual_sha" == "$VERIFIED_SHA" ]] || { echo '::error::Release tag does not match the tested commit'; exit 1; }
+          draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)
+          [[ "$draft" == true ]] || { echo '::error::Only our unpublished staging release can be replaced'; exit 1; }
+          gh release delete "$RELEASE_TAG" --yes
+          if ! gh release create "$RELEASE_TAG" dist/* --verify-tag --draft --prerelease \
             --title "SumOS $RELEASE_TAG · installable amd64 ISO" \
-            --notes-file /tmp/sumos-release-notes.md
+            --notes-file /tmp/sumos-release-notes.md 2> /tmp/release-upload-error; then
+            python3 - <<'PY'
+          from pathlib import Path
+          error = Path('/tmp/release-upload-error').read_text()[-1800:]
+          print('::error::' + error.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
+          PY
+            exit 1
+          fi
+          gh release view "$RELEASE_TAG" --json assets --jq '.assets | map({name, size})' > /tmp/staged-assets.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          expected = {p.name: p.stat().st_size for p in Path('dist').iterdir()}
+          actual = {p['name']: p['size'] for p in json.loads(Path('/tmp/staged-assets.json').read_text())}
+          if actual != expected:
+              raise SystemExit('::error::Release assets are incomplete; retaining the private draft')
+          print(f'All {len(expected)} assets staged with the expected sizes')
+          PY
           gh release edit "$RELEASE_TAG" --draft=false --prerelease

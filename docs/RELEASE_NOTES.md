@@ -8,7 +8,7 @@ redistributed in this ISO. Accounts and files in Live mode are ephemeral without
 separately configured persistence. No local model is included.
 
 This release job requires BIOS and UEFI desktop/RPC readiness in a 4 GiB QEMU VM
-and enforces a 900 MiB idle-memory ceiling. See included logs and screenshots.
+and enforces a 900 MiB idle-memory ceiling. See logs and screenshots in `boot-tests.tar.gz`.
 This does not cover arbitrary browser workloads, real OAuth/model service access
 or physical hardware compatibility. CI also installs to fresh BIOS and UEFI
 virtual disks and verifies independent disk boot and persistent user state.
