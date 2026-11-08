@@ -28,3 +28,4 @@ jobs:
           echo "Inspecting run $DIAG_RUN_ID"
           gh run download "$DIAG_RUN_ID" --name sumos-build-diagnostics --dir diagnostics
           find diagnostics -type f -name '*.log' -print0 | xargs -0 -r python3 scripts/ci-diagnostics.py
+          python3 scripts/ci-image-diagnostics.py diagnostics
