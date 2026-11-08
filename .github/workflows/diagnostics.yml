@@ -1,0 +1,30 @@
+name: Inspect ISO build diagnostics
+on:
+  push:
+    branches: [ci/diagnostics]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'ISO workflow run ID (empty selects the latest failed run)'
+        required: false
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download retained diagnostics and surface the failure
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DIAG_RUN_ID: ${{ inputs.run_id }}
+        run: |
+          if [[ -z "$DIAG_RUN_ID" ]]; then
+            DIAG_RUN_ID=$(gh run list --workflow iso.yml --status failure --limit 1 --json databaseId --jq '.[0].databaseId')
+          fi
+          [[ "$DIAG_RUN_ID" =~ ^[0-9]+$ ]] || { echo 'No failed ISO run found'; exit 1; }
+          echo "Inspecting run $DIAG_RUN_ID"
+          gh run download "$DIAG_RUN_ID" --name sumos-build-diagnostics --dir diagnostics
+          find diagnostics -type f -name '*.log' -print0 | xargs -0 -r python3 scripts/ci-diagnostics.py
