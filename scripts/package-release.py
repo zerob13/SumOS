@@ -47,7 +47,7 @@ shutil.copy2(work / 'config/includes.chroot/opt/dim/NOTICE', out / 'DIM-NOTICE')
 # Include this distribution's build scripts and configuration, including local
 # changes when building from an uncommitted checkout.
 with tarfile.open(out / 'sumos-source.tar.gz', 'w:gz') as tar:
-    for name in ['README.md', 'LICENSE', 'versions.json', 'live', 'assets', 'scripts', 'docs', 'tests', '.github']:
+    for name in ['README.md', 'LICENSE', 'Dockerfile', 'versions.json', 'live', 'assets', 'scripts', 'docs', 'tests', '.github']:
         tar.add(ROOT / name, arcname=f'SumOS/{name}',
                 filter=lambda item: None if '__pycache__' in item.name or item.name.endswith('.pyc') else item)
 manifest = {

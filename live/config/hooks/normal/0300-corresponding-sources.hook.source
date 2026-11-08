@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+# source_hooks runs in the source/ directory with source APT indexes enabled.
+cd ..
+python3 config/source-tools/collect-extra-sources.py .

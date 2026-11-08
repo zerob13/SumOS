@@ -18,7 +18,7 @@ class ReleaseBundle(unittest.TestCase):
         for name in ['scripts', 'docs', 'live', 'assets', 'tests', '.github', 'dist', '.cache',
                      'build/iso/config/includes.chroot/opt/dim']:
             (self.root / name).mkdir(parents=True, exist_ok=True)
-        for name in ['README.md', 'LICENSE', 'versions.json', 'docs/LICENSING.md', 'scripts/package-release.py']:
+        for name in ['README.md', 'LICENSE', 'Dockerfile', 'versions.json', 'docs/LICENSING.md', 'scripts/package-release.py']:
             shutil.copy2(ROOT / name, self.root / name)
         work = self.root / 'build/iso'
         self.iso = work / 'fixture.hybrid.iso'

@@ -15,10 +15,20 @@ This is not an official Debian image. No Debian logo is used as SumOS's logo.
 Debian's name and trademarks remain their owners' property.
 
 `live-build --source true --source-images tar` downloads companion source
-packages. The build rejects a missing-source report and requires the Debian
-source archive and live configuration archive. It also compares every installed
-source package/version against the archived `.dsc` descriptors and verifies
-the sizes and SHA-256 hashes of every source file they reference. Release uploads must include
+packages. A source-stage hook completes that inventory using every installed
+binary and retained bootloader/helper `.deb`, including exact `Built-Using` and
+`Static-Built-Using` dependencies (notably the actual Linux source behind signed
+kernels). It compares these versions against the archived `.dsc` descriptors and
+verifies every referenced source file's size and SHA-256.
+
+Debian live-build currently attempts to download `grub-efi` as a source package,
+even though that bootloader flag is not a source identity. The hook downloads the
+actual GRUB source from binary metadata (`grub2`), verifies the entire expanded
+inventory, and only then retains any upstream download report as
+`source/live/live-build-download-report.txt`. A genuine missing version, corrupt
+source or failed download still blocks the build. The full required inventory is
+saved in `source/live/sumos-required-sources.json`. Source archives are generated
+only after this check. Release uploads must include
 all of these files, not just the ISO. Debian source packages include upstream
 source, Debian patches and packaging/build instructions. Preserve them alongside
 that exact binary image, including mirrors and older releases; do not replace

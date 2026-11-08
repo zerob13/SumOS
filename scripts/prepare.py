@@ -18,6 +18,10 @@ def prepare(work):
     if work.exists():
         raise SystemExit(f'{work} already exists; use a new empty build directory')
     shutil.copytree(ROOT / 'live', work, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+    tools = work / 'config/source-tools'
+    tools.mkdir(parents=True, exist_ok=True)
+    for name in ['collect-extra-sources.py', 'verify-sources.py']:
+        shutil.copy2(ROOT / 'scripts' / name, tools / name)
     prefix = work / 'config/includes.chroot'
     source = fetch_dim.stage(ROOT / '.cache', prefix)
     banner = ROOT / 'assets/dim-banner.png'
