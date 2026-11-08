@@ -118,6 +118,7 @@ def test_install(iso, firmware, out):
         subprocess.run(['qemu-img', 'create', '-f', 'qcow2', str(disk), '24G'], check=True)
         installer = directory / 'installer'
         subprocess.run(['xorriso', '-osirrox', 'on', '-indev', str(iso), '-extract', '/install', str(installer)], check=True)
+        username = 'sumosci' + secrets.token_hex(4)
         password = ''.join(secrets.choice('abcdefghijklmnopqrstuvwxyz0123456789') for _ in range(28))
         hashed = subprocess.check_output(['openssl', 'passwd', '-6', '-stdin'], input=password.encode()).decode().strip()
         preseed = (ROOT / 'live/config/preseed/sumos.cfg.installer').read_text() + f'''
@@ -141,7 +142,7 @@ d-i partman/choose_partition select finish
 d-i partman/confirm boolean true
 d-i partman/confirm_nooverwrite boolean true
 d-i passwd/user-fullname string SumOS installation test
-d-i passwd/username string operator
+d-i passwd/username string {username}
 d-i passwd/user-password-crypted password {hashed}
 d-i grub-installer/only_debian boolean true
 d-i grub-installer/bootdev string /dev/vda
@@ -174,19 +175,19 @@ d-i debian-installer/exit/poweroff boolean true
                 guest.wait_for('SUMOS_INSTALLED_READY', 420)
                 with paramiko.SSHClient() as client:
                     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                    client.connect('127.0.0.1', port=ssh_port, username='operator', password=password,
+                    client.connect('127.0.0.1', port=ssh_port, username=username, password=password,
                                    look_for_keys=False, allow_agent=False, timeout=20)
                     key = client.get_transport().get_remote_server_key().asbytes()
                     if host_key is not None and key != host_key:
                         raise RuntimeError('SSH host identity changed across reboot')
                     host_key = key
-                    assert ssh_command(client, 'id -un') == 'operator'
-                    assert ssh_command(client, 'cat /etc/sumos/installed-user') == 'operator'
+                    assert ssh_command(client, 'id -un') == username
+                    assert ssh_command(client, 'cat /etc/sumos/installed-user') == username
                     ssh_command(client, 'test ! -e /run/live/medium && test ! -e /etc/sudoers.d/live')
                     ssh_command(client, '! getent passwd sumos && ! sudo -n true 2>/dev/null')
                     ssh_command(client, 'python3 /usr/lib/sumos/health.py')
                     assert ssh_command(client, 'systemctl --user is-active sumos-dim.service') == 'active'
-                    assert ssh_command(client, 'loginctl show-user operator -p Linger --value') == 'yes'
+                    assert ssh_command(client, f'loginctl show-user {username} -p Linger --value') == 'yes'
                     dim = json.loads((ROOT / 'versions.json').read_text())['dim']
                     assert ssh_command(client, 'sha256sum /opt/dim/bin/dimcode').split()[0] == dim['binary_sha256']
                     expected = dim['version']
