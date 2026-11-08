@@ -45,6 +45,7 @@ class Guest:
                         '-kernel', str(installer / 'vmlinuz'), '-initrd', str(installer / 'initrd.gz'),
                         '-append', 'auto=true priority=critical debian-installer/locale=en_US.UTF-8 '
                         'keyboard-configuration/xkb-keymap=us netcfg/choose_interface=auto '
+                        'netcfg/get_hostname=sumos-ci netcfg/get_domain=local '
                         f'preseed/url={url} console=ttyS0,115200n8 DEBIAN_FRONTEND=text ---']
         else:
             command += ['-boot', 'c']

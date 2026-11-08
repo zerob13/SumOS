@@ -3,7 +3,7 @@ set -eu
 report() {
     printf '%s\n' "$1"
     if [ -c /dev/ttyS0 ]; then
-        printf '%s\n' "$1" > /dev/ttyS0 2>/dev/null || true
+        timeout 1 sh -c 'printf "%s\n" "$1" > /dev/ttyS0' sh "$1" 2>/dev/null || true
     fi
 }
 username=$(cat /etc/sumos/installed-user)

@@ -40,6 +40,6 @@ Components: main
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 SOURCES
 printf '# SumOS repositories are configured in sources.list.d/debian.sources\n' > /target/etc/apt/sources.list
-if [ -c /dev/ttyS0 ]; then
+if [ -c /dev/ttyS0 ] && grep -q 'console=ttyS0' /proc/cmdline; then
     printf 'SUMOS_INSTALL_COMPLETE\n' > /dev/ttyS0 2>/dev/null || true
 fi
