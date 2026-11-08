@@ -21,7 +21,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p diagnostics
-          if gh api repos/zerob13/SumOS/actions/jobs/128781465683/logs > diagnostics/active-build.log; then
+          if gh api repos/zerob13/SumOS/actions/jobs/128805431696/logs > diagnostics/active-build.log; then
             python3 scripts/ci-diagnostics.py diagnostics/active-build.log
           else
             echo '::notice::GitHub has not made the active job log available.'
