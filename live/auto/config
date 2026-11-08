@@ -20,6 +20,7 @@ lb config noauto \
     --bootloaders "syslinux grub-efi" \
     --debian-installer live \
     --debian-installer-gui true \
+    --debian-installer-preseedfile preseed.cfg \
     --mirror-debian-installer https://deb.debian.org/debian \
     --source true \
     --source-images tar \
