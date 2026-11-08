@@ -75,6 +75,7 @@ jobs:
           name: sumos-build-diagnostics
           path: |
             build/*.log
+            build/iso/source/missing-source.txt
             dist/boot-*
             dist/qemu-*
           if-no-files-found: ignore

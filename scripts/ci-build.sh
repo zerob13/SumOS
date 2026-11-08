@@ -5,7 +5,7 @@ mkdir -p build
 report_failure() {
     result=$?
     trap - ERR
-    python3 scripts/ci-diagnostics.py build/builder-image.log build/iso-build.log || true
+    python3 scripts/ci-diagnostics.py build/builder-image.log build/iso-build.log build/iso/source/missing-source.txt || true
     exit "$result"
 }
 trap report_failure ERR
