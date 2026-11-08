@@ -8,7 +8,7 @@ SumOS 的发行版配置与集成代码使用 MIT；镜像内的 Linux、Debian 
 
 - Debian 13 stable / amd64，BIOS + UEFI hybrid Live ISO，内置 Debian 图形/文本磁盘安装器。
 - Openbox + X11 + tint2 + PCManFM + LXTerminal，无完整桌面元包、Firefox 或 Electron 外壳。
-- 固定版本的官方 account-enabled Dim 原生包，作为当前桌面用户的 systemd 服务启动。
+- 固定版本的官方 account-enabled Dim 原生包，以普通用户的 systemd 服务运行；安装后无需登录桌面即可自启。
 - 原生 Tk 欢迎页自动申请 OAuth 设备码，显示二维码、验证码、登录进度，支持中国/全球服务、重试、离线跳过和暂停。
 - Dim 官方仓库品牌图用于 GRUB、Plymouth 和壁纸，保留出处。
 - Bash/Zsh 基础补全、Neovim、tmux、ripgrep、fd、fzf；默认不加载 LazyVim、语言服务器或本地模型。
@@ -58,13 +58,13 @@ sumos-pause
 sumos-agent
 ```
 
-`dim` 命令固定使用 `~/.dimcode`，服务、CLI 和欢迎页共享 `~/.dimcode/rust/daemon.sock`。没有公网 RPC 端口。不要同时启动另一个同目录的上游守护进程。桌面会话启动服务，不开启 linger；退出用户会话时应结束用户服务。
+`dim` 命令固定使用 `~/.dimcode`，服务、CLI 和欢迎页共享 `~/.dimcode/rust/daemon.sock`。没有公网 RPC 端口。不要同时启动另一个同目录的上游守护进程。Live 模式由桌面会话启动服务；安装到硬盘后，安装账号启用 linger，Dim 开机自启并在退出桌面后继续运行。
 
 Agent 以普通用户运行，保留 Dim 的工具审批。X11、同用户文件和 shell 本身不是安全隔离边界；暂停按钮也是操作控制，不是防恶意代码的安全机制。不要用 `sudo dim`，不要把 Live 默认权限用于生产密钥保护。
 
 ## 验证
 
-Debian 上安装 `python3-tk python3-pil python3-pil.imagetk python3-qrcode xvfb xauth shellcheck live-build` 后：
+Debian 上安装 `python3-tk python3-pil python3-pil.imagetk python3-qrcode python3-paramiko xvfb xauth shellcheck live-build curl gpgv debian-archive-keyring xz-utils` 后：
 
 ```sh
 python3 scripts/fetch-dim.py --prefix build/staging
@@ -76,7 +76,7 @@ python3 scripts/prepare.py build/config-check
 
 `prepare.py` 的目标必须不存在。测试会实际启动锁定的 Dim 原生服务，验证 CLI/RPC 互通及设备登录能力；欢迎页流程使用本地协议服务模拟授权成功、过期、断网与取消，不使用真实账户。
 
-构建 ISO 后安装 `qemu-system-x86 ovmf python3-pil`，执行：
+构建 ISO 后安装 `qemu-system-x86 qemu-utils ovmf python3-pil python3-paramiko xorriso openssl`，执行：
 
 ```sh
 python3 scripts/smoke-iso.py dist/sumos-amd64.iso --firmware bios

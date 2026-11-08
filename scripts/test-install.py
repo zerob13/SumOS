@@ -156,6 +156,7 @@ d-i debian-installer/exit/poweroff boolean true
         worker = threading.Thread(target=server.serve_forever, daemon=True)
         worker.start()
         ssh_port = unused_port()
+        print(f'::notice title=Disk installation ({firmware})::Installing to a fresh 24 GiB test disk', flush=True)
         guest = Guest(directory, firmware, disk, out, 'installer', ssh_port,
             install=(iso, installer, f'http://10.0.2.2:{server.server_port}/preseed.cfg'))
         try:
@@ -169,6 +170,7 @@ d-i debian-installer/exit/poweroff boolean true
         host_key = None
         for label in ['first-boot', 'second-boot']:
             # The installation medium is deliberately absent from these commands.
+            print(f'::notice title=Disk installation ({firmware})::Starting {label} without the ISO', flush=True)
             guest = Guest(directory, firmware, disk, out, label, ssh_port)
             try:
                 # This marker must arrive before SSH login can start a user manager.
@@ -197,7 +199,7 @@ d-i debian-installer/exit/poweroff boolean true
                     else:
                         assert ssh_command(client, 'cat "$HOME/install-persistence-check"') == marker
                     ssh_command(client, 'sync')
-                    print(f'{firmware} {label}: installed App Server ready before login; account and state verified')
+                    print(f'::notice title=Disk installation ({firmware})::{label}: installed App Server ready before login; account and state verified', flush=True)
             finally:
                 guest.close()
 
