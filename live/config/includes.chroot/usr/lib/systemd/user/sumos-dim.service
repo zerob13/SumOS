@@ -1,6 +1,6 @@
 [Unit]
+ConditionUser=!root
 Description=SumOS Dim agent runtime (current desktop user)
-PartOf=graphical-session.target
 StartLimitIntervalSec=60
 StartLimitBurst=3
 
@@ -16,3 +16,8 @@ RestartSec=3
 TimeoutStopSec=15
 KillMode=control-group
 Environment=MALLOC_ARENA_MAX=2
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=%h/.Xauthority
+
+[Install]
+WantedBy=default.target

@@ -14,3 +14,6 @@ plymouth-set-default-theme sumos
 update-initramfs -u -k all
 systemctl enable lightdm.service NetworkManager.service zramswap.service sumos-boot-check.service
 # Do not run services inside a build chroot.
+
+systemctl disable ssh.service ssh.socket
+rm -f /etc/ssh/ssh_host_*

@@ -22,6 +22,10 @@ def prepare(work):
     tools.mkdir(parents=True, exist_ok=True)
     for name in ['collect-extra-sources.py', 'verify-sources.py']:
         shutil.copy2(ROOT / 'scripts' / name, tools / name)
+    installer_spec = importlib.util.spec_from_file_location('installer_images', ROOT / 'scripts/installer-images.py')
+    installer = importlib.util.module_from_spec(installer_spec)
+    installer_spec.loader.exec_module(installer)
+    installer.stage(work)
     prefix = work / 'config/includes.chroot'
     source = fetch_dim.stage(ROOT / '.cache', prefix)
     banner = ROOT / 'assets/dim-banner.png'

@@ -4,6 +4,7 @@
     <item label="Dim Agent"><action name="Execute"><command>lxterminal -e sumos-agent</command></action></item>
     <item label="Sign in / Welcome"><action name="Execute"><command>sumos-welcome</command></action></item>
     <item label="Pause agent (Super+Esc)"><action name="Execute"><command>sumos-pause</command></action></item>
+    <item label="Install SumOS to disk"><action name="Execute"><command>debian-installer-launcher</command></action></item>
     <separator/>
     <item label="Terminal"><action name="Execute"><command>lxterminal</command></action></item>
     <item label="Files"><action name="Execute"><command>pcmanfm</command></action></item>

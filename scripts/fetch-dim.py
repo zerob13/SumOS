@@ -50,6 +50,8 @@ def stage(cache, prefix):
         if (manifest['version'], manifest['sourceCommit'], manifest['platform'], manifest['account']) != (
                 lock['version'], lock['source_commit'], 'linux-x64', True):
             raise ValueError('Upstream identity/account-enabled build mismatch')
+        if manifest['files']['bin/dimcode'] != lock['binary_sha256']:
+            raise ValueError('Pinned Dim executable checksum differs from release manifest')
         actual_files = {str(p.relative_to(package)): hashlib.sha256(p.read_bytes()).hexdigest()
                         for p in package.rglob('*') if p.is_file()
                         and p.name not in ('package.json', 'release-manifest.json')}

@@ -1,9 +1,5 @@
 # Base, boot and low-memory desktop. No desktop task/metapackage.
 linux-image-amd64
-live-boot
-live-config
-live-config-systemd
-user-setup
 keyboard-configuration
 iproute2
 systemd-sysv
@@ -63,3 +59,4 @@ util-linux
 
 libnotify-bin
 gpg
+openssh-server

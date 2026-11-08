@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """A small native first-session UI; no browser or HTTP listener is needed."""
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 import queue
 import subprocess
 import tkinter as tk
@@ -56,9 +57,12 @@ class Welcome:
         for text, action in [('Retry sign-in', self.begin), ('Open agent', self.open_agent),
                              ('Pause agent', self.pause), ('Network', self.network)]:
             tk.Button(actions, text=text, command=action).pack(side='left', padx=4)
+        if Path('/run/live/medium').exists():
+            tk.Button(actions, text='Install OS', command=lambda: subprocess.Popen(['debian-installer-launcher'])).pack(side='left', padx=4)
         tk.Button(root, text='Install Google Chrome…', command=self.install_chrome).pack(pady=8)
         self.label('Chrome is downloaded from Google after you accept its terms.', 10).pack()
-        self.label('Live sessions forget logins at shutdown unless persistence is configured.', 10).pack(pady=6)
+        if Path('/run/live/medium').exists():
+            self.label('Install to disk before signing in to keep your account and files.', 10).pack(pady=6)
         tk.Button(root, text='Continue without signing in', command=self.close).pack(pady=5)
         self.later(100, self.drain)
         self.later(500, self.begin)

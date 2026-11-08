@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Install SumOS to disk
+Comment=Install to a hard drive using Debian Installer
+TryExec=debian-installer-launcher
+Exec=debian-installer-launcher
+Icon=system-software-install
+Categories=System;

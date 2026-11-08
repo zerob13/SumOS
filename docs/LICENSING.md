@@ -16,7 +16,7 @@ Debian's name and trademarks remain their owners' property.
 
 `live-build --source true --source-images tar` downloads companion source
 packages. A source-stage hook completes that inventory using every installed
-binary and retained bootloader/helper `.deb`, including exact `Built-Using` and
+binary and retained bootloader/helper `.deb`, installer pool `.deb`/`.udeb`, and authenticated installer-initrd package inventories, including exact `Built-Using` and
 `Static-Built-Using` dependencies (notably the actual Linux source behind signed
 kernels). It compares these versions against the archived `.dsc` descriptors and
 verifies every referenced source file's size and SHA-256.
@@ -84,3 +84,16 @@ Chrome terms: https://www.google.com/chrome/terms/ .
 Non-free firmware is excluded by default. Adding firmware or other archives is
 a separate change requiring a package-by-package redistribution review; the
 repository MIT license does not make those files MIT.
+
+## Installer images
+
+The Debian installer kernel and initrd pins are recorded in `versions.json`.
+Preparation verifies Debian's InRelease using the Debian archive keyring, checks
+SHA256SUMS against that authenticated Release, and checks each pinned image
+against both the signed metadata and its SHA-256. The signed installer package
+index resolves embedded udeb versions to their exact source identities. Installer
+source, embedded components, downloadable installer modules and installed target
+packages are all included in source auditing, including Built-Using dependencies.
+SumOS's finish-install hook and preseed defaults are in its accompanying source.
+Updating the pinned installer release requires reviewing its new signed hashes;
+verification failures never fall back to an unverified download.

@@ -27,9 +27,9 @@ been simulated as a successful real login.
    Decide whether to publish a separately reviewed firmware-enabled image.
 5. Add and test encrypted persistence before recommending storing credentials
    on a portable USB. Never publish a captured authenticated Live filesystem.
-6. Add a Calamares-based disk installer only after full VM tests of UEFI/BIOS,
-   partitioning, encryption, user creation, bootloader installation, upgrades
-   and data preservation. Do not ship an untested disk-writing wrapper.
+6. Debian Installer now supplies disk installation. Continue machine-level
+   acceptance for encryption, dual boot, upgrades and preserved user data; the
+   automated disk tests cover guided empty-disk BIOS/UEFI installation.
 
 ## Agent desktop integration
 

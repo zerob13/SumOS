@@ -6,7 +6,7 @@ SumOS 的发行版配置与集成代码使用 MIT；镜像内的 Linux、Debian 
 
 ## 首版范围
 
-- Debian 13 stable / amd64，BIOS + UEFI hybrid Live ISO。
+- Debian 13 stable / amd64，BIOS + UEFI hybrid Live ISO，内置 Debian 图形/文本磁盘安装器。
 - Openbox + X11 + tint2 + PCManFM + LXTerminal，无完整桌面元包、Firefox 或 Electron 外壳。
 - 固定版本的官方 account-enabled Dim 原生包，作为当前桌面用户的 systemd 服务启动。
 - 原生 Tk 欢迎页自动申请 OAuth 设备码，显示二维码、验证码、登录进度，支持中国/全球服务、重试、离线跳过和暂停。
@@ -14,7 +14,7 @@ SumOS 的发行版配置与集成代码使用 MIT；镜像内的 Linux、Debian 
 - Bash/Zsh 基础补全、Neovim、tmux、ripgrep、fd、fzf；默认不加载 LazyVim、语言服务器或本地模型。
 - zram，目标硬件 4GB 内存；CI 以 **4 GiB** 虚拟机验证桌面和 Dim RPC，空闲已用内存预算 900 MiB。真实 Chrome/网页/Agent 工作负载需实机测量，不能由此保证任意负载流畅。
 
-**当前是 Live 原型，不含磁盘安装器、Secure Boot 支持或预装闭源固件。** 默认只使用 Debian main。部分 Wi-Fi、显卡需要额外固件；首轮建议以有线网络或受支持的虚拟网卡测试。Live 内的账号和文件默认随关机丢失。可在了解 Debian Live 的加密持久化配置后自行启用持久化；不要在公开重打包的镜像中保存登录凭据。
+**这是带磁盘安装器的预览版，暂不支持 Secure Boot，也不预装闭源固件。** 默认只使用 Debian main。部分 Wi-Fi、显卡需要额外固件；首轮建议以有线网络或受支持的虚拟网卡测试。Live 内的账号和文件默认随关机丢失；从启动菜单选择 **Install SumOS (graphical)**，或在 Live 欢迎页选择 **Install OS** 安装到硬盘。安装后使用自己创建的账户，Dim App Server 开机即以该用户身份运行，账号和文件保存在系统盘。详见 [安装说明](docs/INSTALL.md)。
 
 Google Chrome 不随公共 ISO 再分发。在欢迎页接受 Google 条款后，由签名 APT 仓库联网安装并保留自动更新源；需要管理员授权。离线时 Dim UI 与系统可启动，联网登录和推理不可用。安装 Chrome 会占用 Live overlay 和额外内存。
 
@@ -36,7 +36,7 @@ sudo chown -R "$(id -u):$(id -g)" dist build
 
 ## 开机使用
 
-Live 用户名为 `sumos`，由 Debian live-config 自动登录。Live 用户拥有 Debian Live 默认的免密码管理员权限，便于安装软件和测试；Dim 服务本身以普通用户运行。这是便携测试环境，不能当作已加固的多用户系统。
+试用 Live 时用户名为 `sumos`，由 Debian live-config 自动登录。Live 用户拥有 Debian Live 默认的免密码管理员权限，便于安装软件和测试；Dim 服务本身以普通用户运行。这是便携测试环境，不能当作已加固的多用户系统。
 
 1. 启动后欢迎页自动连接 Dim，联网时展示设备登录二维码。用手机扫描，并按页面提示输入单独显示的验证码。
 2. 授权后选择 **Open agent**，在 Dim 中选模型并发送任务。模型调用仍取决于账户、配额和网络。
@@ -83,11 +83,11 @@ python3 scripts/smoke-iso.py dist/sumos-amd64.iso --firmware bios
 python3 scripts/smoke-iso.py dist/sumos-amd64.iso --firmware uefi
 ```
 
-测试直接启动最终 ISO，等待真实 Openbox、tint2 和 Dim RPC 就绪，记录内存和桌面截图；超时或超过预算时失败。它不覆盖真实 OAuth 服务、模型响应、物理 GPU/Wi-Fi、持久化或磁盘安装。
+测试直接启动最终 ISO，等待真实 Openbox、tint2 和 Dim RPC 就绪，记录内存和桌面截图；超时或超过预算时失败。磁盘安装测试额外验证 BIOS/UEFI 安装、移除 ISO 后两次硬盘启动、服务开机自启及文件持久化；详见 [安装验收](docs/INSTALL.md)。测试不覆盖真实 OAuth 服务、模型响应、物理 GPU/Wi-Fi、双系统和加密安装。
 
 ## CI 和 Release
 
-[GitHub Actions](.github/workflows/iso.yml)：PR 做静态检查和原生集成测试；推送 master 或手动触发后构建 ISO、对应源码，并执行 BIOS/UEFI 4 GiB 启动检查。全部通过后保留 14 天构建产物。启动测试失败时，也会在诊断产物中保留同一次 ISO、对应源码与截图，方便排查；这些失败产物不能视为可用发行版。
+[GitHub Actions](.github/workflows/iso.yml)：PR 做静态检查和原生集成测试；推送 master 或手动触发后构建 ISO、对应源码，并执行 BIOS/UEFI 4 GiB Live 启动和空盘安装后启动检查。全部通过后保留 14 天构建产物。启动测试失败时，也会在诊断产物中保留同一次 ISO、对应源码与截图，方便排查；这些失败产物不能视为可用发行版。
 
 推送 `v*` 标签会在以上检查通过后自动创建 **GitHub prerelease**，上传同一次构建的 ISO、全部源码分卷、许可证、清单、截图、日志和校验值。使用仓库自带的 `GITHUB_TOKEN`，无额外 OAuth client ID 或账号 secret。初版不自动标记为稳定版。
 

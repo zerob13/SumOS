@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Require exact source versions and all files named by Debian source descriptors."""
 import hashlib
+import json
 from pathlib import Path
 import re
 import subprocess
@@ -20,6 +21,46 @@ def built_using(value):
     return result
 
 
+def control_sources(control):
+    source = control.get('Source', control['Package'])
+    match = re.fullmatch(r'([^\s]+)(?: \(([^)]+)\))?', source)
+    if not match:
+        raise ValueError(f'Invalid source identity: {source}')
+    result = {(match[1], match[2] or control['Version'])}
+    result.update(built_using(control.get('Built-Using', '')))
+    result.update(built_using(control.get('Static-Built-Using', '')))
+    return result
+
+
+def installer_sources(work, verify_images=False):
+    inventory = work / 'config/installer-inventory'
+    statuses = list(inventory.glob('*.status'))
+    if not statuses:
+        return set()
+    if verify_images:
+        for name, expected in json.loads((inventory / 'kernels.json').read_text()).items():
+            with (work / 'binary/install' / name).open('rb') as stream:
+                if hashlib.file_digest(stream, 'sha256').hexdigest() != expected:
+                    raise ValueError(f'Built installer kernel differs from authenticated pin: {name}')
+    index = {}
+    for paragraph in (inventory / 'Packages').read_text().strip().split('\n\n'):
+        control = Parser().parsestr(paragraph)
+        index[(control['Package'], control['Version'])] = control
+    result = {('debian-installer', (inventory / 'version').read_text().strip())}
+    for status in statuses:
+        for paragraph in status.read_text().strip().split('\n\n'):
+            control = Parser().parsestr(paragraph)
+            key = (control['Package'], control['Version'])
+            if key[0] == 'debian-installer' and key[1] in {
+                    'cdrom-isolinux-' + (inventory / 'version').read_text().strip(),
+                    'cdrom-gtk-' + (inventory / 'version').read_text().strip()}:
+                continue
+            if key not in index:
+                raise ValueError(f'Pinned installer package absent from signed package index: {key}')
+            result.update(control_sources(index[key]))
+    return result
+
+
 def required_sources(work):
     installed = subprocess.check_output(['chroot', str(work / 'chroot'), 'dpkg-query', '-W',
         '-f=${source:Package}\t${source:Version}\t${Built-Using}\t${Static-Built-Using}\n'], text=True)
@@ -33,15 +74,14 @@ def required_sources(work):
         required.update(built_using(static))
     # Bootloader helpers are temporarily installed and then removed by live-build.
     # Its retained debs record the precise source for the code copied into the ISO.
-    for archive in (work / 'cache').rglob('*.deb'):
+    archives = set()
+    for directory in [work / 'cache', work / 'binary/pool', work / 'binary/pool-udeb']:
+        for extension in ['*.deb', '*.udeb']:
+            archives.update(directory.rglob(extension))
+    for archive in archives:
         control = Parser().parsestr(subprocess.check_output(['dpkg-deb', '--field', str(archive)], text=True))
-        source = control.get('Source', control['Package'])
-        match = re.fullmatch(r'([^\s]+)(?: \(([^)]+)\))?', source)
-        if not match:
-            raise ValueError(f'Invalid source identity in {archive}')
-        required.add((match[1], match[2] or control['Version']))
-        required.update(built_using(control.get('Built-Using', '')))
-        required.update(built_using(control.get('Static-Built-Using', '')))
+        required.update(control_sources(control))
+    required.update(installer_sources(work, verify_images=True))
     return required
 
 

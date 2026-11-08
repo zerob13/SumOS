@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+report() {
+    printf '%s\n' "$1"
+    if [ -c /dev/ttyS0 ]; then
+        printf '%s\n' "$1" > /dev/ttyS0 2>/dev/null || true
+    fi
+}
+username=$(cat /etc/sumos/installed-user)
+[ ! -e /run/live/medium ]
+case "$(findmnt -n -o SOURCE /)" in
+    /dev/*) ;;
+    *) report 'SUMOS_INSTALLED_ROOT_INVALID'; exit 1 ;;
+esac
+for _attempt in $(seq 1 90); do
+    if timeout 5 runuser -u "$username" -- /usr/bin/python3 /usr/lib/sumos/health.py >/dev/null 2>&1; then
+        report 'SUMOS_INSTALLED_READY'
+        exit 0
+    fi
+    sleep 2
+done
+report 'SUMOS_INSTALLED_FAILED'
+exit 1

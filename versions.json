@@ -7,10 +7,20 @@
     "integrity": "sha512-9Z6Ci2Z/GabLpDxGqnEb6lAJkqSFRS8pLsMTF6wLKzZbCsujHrnNXp/cA1RQk+Ap2JuGnletpdoG4r3aT3quyw==",
     "source_commit": "d3910d14999119c37d61d5d52139dfa29b81eab3",
     "source_url": "https://codeload.github.com/arcships/dim/tar.gz/d3910d14999119c37d61d5d52139dfa29b81eab3",
-    "source_sha256": "ff58c543b6f738383339c5c256ca1156ad3bfacc660be5de695a253fd9080fb9"
+    "source_sha256": "ff58c543b6f738383339c5c256ca1156ad3bfacc660be5de695a253fd9080fb9",
+    "binary_sha256": "93da59c424cdc421a9079d38478c817e6226376eabdea23418140c3cbe042c3c"
   },
   "branding": {
     "source_commit": "975ef55dd5cade0d08bdd4828454b9490da32ba8",
     "sha256": "1690d73d8b8e39ddca20e8f61b2e6e85b342eb56f877777a70160dbe8e617198"
+  },
+  "installer": {
+    "version": "20250803+deb13u7",
+    "files": {
+      "cdrom/vmlinuz": "2b2358b37674d2505350528875bb17afae2a36522a9e8a9417eaca65a7da0e08",
+      "cdrom/initrd.gz": "8de544ab627ab794504c530c82de621814386b5b67a492f1e3133390c47ea933",
+      "cdrom/gtk/vmlinuz": "2b2358b37674d2505350528875bb17afae2a36522a9e8a9417eaca65a7da0e08",
+      "cdrom/gtk/initrd.gz": "0c64f072959f7b841be9cbd323512da62818947a35a79c5c62430d3fabc2b3cb"
+    }
   }
 }

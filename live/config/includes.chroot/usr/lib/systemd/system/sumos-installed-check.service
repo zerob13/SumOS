@@ -1,0 +1,14 @@
+[Unit]
+Description=SumOS installed App Server readiness
+After=systemd-user-sessions.service ssh.service
+Wants=ssh.service
+ConditionPathExists=/etc/sumos/installed-user
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/sumos/installed-check
+TimeoutStartSec=240
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

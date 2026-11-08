@@ -1,0 +1,45 @@
+#!/bin/sh
+set -eu
+# shellcheck source=/dev/null
+. /usr/share/debconf/confmodule
+db_get passwd/username
+username=$RET
+case "$username" in
+    ''|root|*[!a-z0-9_-]*) echo 'SumOS requires a normal installation user' >&2; exit 1 ;;
+esac
+uid=$(chroot /target id -u "$username")
+[ "$uid" -ge 1000 ]
+# The account and password are created by Debian's installer, never copied from Live.
+rm -f /target/etc/sudoers.d/live /target/usr/share/polkit-1/rules.d/sudo_on_live.rules
+rm -f /target/usr/share/applications/sumos-install.desktop
+sed -i '/<item label="Install SumOS to disk">/d' /target/etc/xdg/openbox/menu.xml
+mkdir -p /target/etc/sumos /target/var/lib/systemd/linger
+printf '%s\n' "$username" > /target/etc/sumos/installed-user
+chmod 0644 /target/etc/sumos/installed-user
+touch "/target/var/lib/systemd/linger/$username"
+mkdir -p /target/etc/systemd/user/sumos-dim.service.d
+printf '[Unit]\nConditionUser=%s\n' "$uid" > /target/etc/systemd/user/sumos-dim.service.d/10-installation-owner.conf
+in-target systemctl --global enable sumos-dim.service
+in-target systemctl enable ssh.service sumos-installed-check.service
+
+rm -f /target/etc/machine-id /target/var/lib/dbus/machine-id
+in-target systemd-machine-id-setup
+ln -sf /etc/machine-id /target/var/lib/dbus/machine-id
+in-target ssh-keygen -A
+cat > /target/etc/apt/sources.list.d/debian.sources <<'SOURCES'
+Types: deb
+URIs: https://deb.debian.org/debian
+Suites: trixie trixie-updates
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: https://security.debian.org/debian-security
+Suites: trixie-security
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+SOURCES
+printf '# SumOS repositories are configured in sources.list.d/debian.sources\n' > /target/etc/apt/sources.list
+if [ -c /dev/ttyS0 ]; then
+    printf 'SUMOS_INSTALL_COMPLETE\n' > /dev/ttyS0 2>/dev/null || true
+fi

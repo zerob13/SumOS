@@ -1,0 +1,6 @@
+# Keep partitioning, credentials and installation confirmation interactive.
+d-i live-installer/enable boolean true
+d-i passwd/root-login boolean false
+d-i apt-setup/use_mirror boolean false
+d-i pkgsel/upgrade select none
+popularity-contest popularity-contest/participate boolean false
