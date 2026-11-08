@@ -3,6 +3,7 @@ set -eu
 report() {
     printf '%s\n' "$1"
     if [ -c /dev/ttyS0 ]; then
+        # shellcheck disable=SC2016
         timeout 1 sh -c 'printf "%s\n" "$1" > /dev/ttyS0' sh "$1" 2>/dev/null || true
     fi
 }
