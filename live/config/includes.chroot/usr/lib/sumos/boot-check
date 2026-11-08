@@ -1,19 +1,37 @@
 #!/bin/sh
 # Emits a non-secret boot diagnostic once; also used by ISO acceptance tests.
 set -eu
+report() {
+    printf '%s\n' "$1"
+    [ ! -c /dev/ttyS0 ] || printf '%s\n' "$1" > /dev/ttyS0
+}
 for _attempt in $(seq 1 90); do
     if id sumos >/dev/null 2>&1; then
         uid=$(id -u sumos)
         if pgrep -u "$uid" -x openbox >/dev/null && pgrep -u "$uid" -x tint2 >/dev/null && \
-            runuser -u sumos -- /usr/bin/python3 /usr/lib/sumos/health.py >/dev/null 2>&1; then
+            timeout 5 runuser -u sumos -- /usr/bin/python3 /usr/lib/sumos/health.py >/dev/null 2>&1; then
             used_kib=$(awk '/^MemTotal:/ {total=$2} /^MemAvailable:/ {available=$2} END {print total-available}' /proc/meminfo)
             message="SUMOS_DESKTOP_READY used_kib=$used_kib"
-            echo "$message"
-            [ ! -c /dev/ttyS0 ] || echo "$message" > /dev/ttyS0
+            report "$message"
             exit 0
         fi
     fi
     sleep 2
 done
-echo 'SumOS desktop readiness check failed' >&2
+report 'SUMOS_BOOT_CHECK_FAILED'
+if id sumos >/dev/null 2>&1; then
+    report 'Live user exists'
+    state=$(timeout 5 runuser -u sumos -- env XDG_RUNTIME_DIR="/run/user/$(id -u sumos)" \
+        systemctl --user show sumos-dim.service -p ActiveState -p Result -p ExecMainStatus 2>&1) || true
+    report "$state"
+    for name in openbox tint2; do
+        if pgrep -u "$(id -u sumos)" -x "$name" >/dev/null; then
+            report "$name is running"
+        else
+            report "$name is not running"
+        fi
+    done
+else
+    report 'Live user sumos was not created'
+fi
 exit 1

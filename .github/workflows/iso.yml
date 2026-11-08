@@ -76,8 +76,7 @@ jobs:
           path: |
             build/*.log
             build/iso/source/missing-source.txt
-            dist/boot-*
-            dist/qemu-*
+            dist/*
           if-no-files-found: ignore
           retention-days: 7
 

@@ -87,7 +87,7 @@ python3 scripts/smoke-iso.py dist/sumos-amd64.iso --firmware uefi
 
 ## CI 和 Release
 
-[GitHub Actions](.github/workflows/iso.yml)：PR 做静态检查和原生集成测试；推送 master 或手动触发后构建 ISO、对应源码，并执行 BIOS/UEFI 4 GiB 启动检查。全部通过后保留 14 天构建产物。
+[GitHub Actions](.github/workflows/iso.yml)：PR 做静态检查和原生集成测试；推送 master 或手动触发后构建 ISO、对应源码，并执行 BIOS/UEFI 4 GiB 启动检查。全部通过后保留 14 天构建产物。启动测试失败时，也会在诊断产物中保留同一次 ISO、对应源码与截图，方便排查；这些失败产物不能视为可用发行版。
 
 推送 `v*` 标签会在以上检查通过后自动创建 **GitHub prerelease**，上传同一次构建的 ISO、全部源码分卷、许可证、清单、截图、日志和校验值。使用仓库自带的 `GITHUB_TOKEN`，无额外 OAuth client ID 或账号 secret。初版不自动标记为稳定版。
 

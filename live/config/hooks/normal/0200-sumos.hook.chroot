@@ -1,5 +1,7 @@
 #!/bin/sh
 set -eu
+test -x /usr/lib/user-setup/user-setup-apply
+test -s /etc/lightdm/lightdm.conf
 # The Debian base keeps its identity and copyright files.
 cat > /etc/lsb-release <<'RELEASE'
 DISTRIB_ID=SumOS
