@@ -26,5 +26,5 @@ lb config noauto \
     --iso-application SumOS \
     --iso-publisher "SumOS community" \
     --iso-volume "SumOS Live amd64" \
-    --bootappend-live "boot=live components username=sumos hostname=sumos-live locales=en_US.UTF-8 keyboard-layouts=us quiet splash live-config.noroot" \
+    --bootappend-live "boot=live components username=sumos hostname=sumos-live locales=en_US.UTF-8 keyboard-layouts=us quiet splash" \
     "${@}"

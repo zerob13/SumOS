@@ -36,7 +36,7 @@ sudo chown -R "$(id -u):$(id -g)" dist build
 
 ## 开机使用
 
-Live 用户名为 `sumos`，由 Debian live-config 自动登录。Live 权限遵循 Debian Live 默认设置，包括可能允许免密码 sudo；这是便携测试环境，不能当作已加固的多用户系统。
+Live 用户名为 `sumos`，由 Debian live-config 自动登录。Live 用户拥有 Debian Live 默认的免密码管理员权限，便于安装软件和测试；Dim 服务本身以普通用户运行。这是便携测试环境，不能当作已加固的多用户系统。
 
 1. 启动后欢迎页自动连接 Dim，联网时展示设备登录二维码。用手机扫描，并按页面提示输入单独显示的验证码。
 2. 授权后选择 **Open agent**，在 Dim 中选模型并发送任务。模型调用仍取决于账户、配额和网络。

@@ -51,8 +51,8 @@ with tarfile.open(out / 'sumos-source.tar.gz', 'w:gz') as tar:
         tar.add(ROOT / name, arcname=f'SumOS/{name}',
                 filter=lambda item: None if '__pycache__' in item.name or item.name.endswith('.pyc') else item)
 manifest = {
-    'sumosCommit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
-    'dirty': bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT)),
+    'sumosCommit': subprocess.check_output(['git', '-c', f'safe.directory={ROOT}', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+    'dirty': bool(subprocess.check_output(['git', '-c', f'safe.directory={ROOT}', 'status', '--porcelain'], cwd=ROOT)),
     'versions': lock,
     'isoBytes': (out / 'sumos-amd64.iso').stat().st_size,
     'debianSources': [p.name for p in sources],
