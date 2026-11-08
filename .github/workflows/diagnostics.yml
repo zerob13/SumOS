@@ -1,7 +1,7 @@
 name: Inspect ISO build diagnostics
 on:
   push:
-    branches: [ci/diagnostics]
+    branches: [ci/active-logs]
   workflow_dispatch:
     inputs:
       run_id:
@@ -16,7 +16,18 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Try reading the active build log with the runner's read-only token
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p diagnostics
+          if gh api repos/zerob13/SumOS/actions/jobs/128781465683/logs > diagnostics/active-build.log; then
+            python3 scripts/ci-diagnostics.py diagnostics/active-build.log
+          else
+            echo '::notice::GitHub has not made the active job log available.'
+          fi
       - name: Download retained diagnostics and surface the failure
+        if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
           DIAG_RUN_ID: ${{ inputs.run_id }}
