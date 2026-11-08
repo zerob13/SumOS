@@ -104,5 +104,6 @@ jobs:
           cd dist
           sha256sum -c SHA256SUMS
           cd ..
-          gh release create "$RELEASE_TAG" dist/* --verify-tag --prerelease \
-            --title "SumOS $RELEASE_TAG · amd64 Live ISO" --notes-file docs/RELEASE_NOTES.md
+          gh release create "$RELEASE_TAG" dist/* --verify-tag --draft --prerelease \
+            --title "SumOS $RELEASE_TAG · installable amd64 ISO" --notes-file docs/RELEASE_NOTES.md
+          gh release edit "$RELEASE_TAG" --draft=false --prerelease
