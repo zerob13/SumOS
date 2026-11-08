@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=SumOS Welcome
+Exec=sumos-welcome
+Icon=system-help
+Categories=System;

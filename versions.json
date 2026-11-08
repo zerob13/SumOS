@@ -1,0 +1,16 @@
+{
+  "debian": "trixie",
+  "architecture": "amd64",
+  "dim": {
+    "version": "0.1.0-alpha.20",
+    "url": "https://registry.npmjs.org/dimcode-linux-x64/-/dimcode-linux-x64-0.1.0-alpha.20.tgz",
+    "integrity": "sha512-9Z6Ci2Z/GabLpDxGqnEb6lAJkqSFRS8pLsMTF6wLKzZbCsujHrnNXp/cA1RQk+Ap2JuGnletpdoG4r3aT3quyw==",
+    "source_commit": "d3910d14999119c37d61d5d52139dfa29b81eab3",
+    "source_url": "https://codeload.github.com/arcships/dim/tar.gz/d3910d14999119c37d61d5d52139dfa29b81eab3",
+    "source_sha256": "ff58c543b6f738383339c5c256ca1156ad3bfacc660be5de695a253fd9080fb9"
+  },
+  "branding": {
+    "source_commit": "975ef55dd5cade0d08bdd4828454b9490da32ba8",
+    "sha256": "1690d73d8b8e39ddca20e8f61b2e6e85b342eb56f877777a70160dbe8e617198"
+  }
+}

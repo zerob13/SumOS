@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+systemctl --user start sumos-dim.service
+cd "$HOME"
+exec dim --permission workspace-write "$@"

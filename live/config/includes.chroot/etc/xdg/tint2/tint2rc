@@ -1,0 +1,15 @@
+panel_items = LTSC
+panel_size = 100% 32
+panel_position = bottom center horizontal
+panel_background_id = 0
+panel_padding = 8 0 4
+launcher_icon_size = 22
+launcher_item_app = /usr/share/applications/sumos-agent.desktop
+launcher_item_app = /usr/share/applications/sumos-welcome.desktop
+launcher_item_app = /usr/share/applications/pcmanfm.desktop
+taskbar_mode = single_desktop
+task_text = 1
+task_icon = 1
+systray_icon_size = 20
+time1_format = %H:%M
+clock_lclick_command = sumos-welcome

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Dim Agent
+Comment=Work with the system agent
+Exec=lxterminal -e sumos-agent
+Icon=utilities-terminal
+Categories=System;

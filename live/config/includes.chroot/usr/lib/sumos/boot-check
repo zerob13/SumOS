@@ -1,0 +1,19 @@
+#!/bin/sh
+# Emits a non-secret boot diagnostic once; also used by ISO acceptance tests.
+set -eu
+for _attempt in $(seq 1 90); do
+    if id sumos >/dev/null 2>&1; then
+        uid=$(id -u sumos)
+        if pgrep -u "$uid" -x openbox >/dev/null && pgrep -u "$uid" -x tint2 >/dev/null && \
+            runuser -u sumos -- /usr/bin/python3 /usr/lib/sumos/health.py >/dev/null 2>&1; then
+            used_kib=$(awk '/^MemTotal:/ {total=$2} /^MemAvailable:/ {available=$2} END {print total-available}' /proc/meminfo)
+            message="SUMOS_DESKTOP_READY used_kib=$used_kib"
+            echo "$message"
+            [ ! -c /dev/ttyS0 ] || echo "$message" > /dev/ttyS0
+            exit 0
+        fi
+    fi
+    sleep 2
+done
+echo 'SumOS desktop readiness check failed' >&2
+exit 1

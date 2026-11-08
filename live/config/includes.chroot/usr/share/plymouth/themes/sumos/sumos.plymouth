@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=SumOS
+Description=SumOS with Dim
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/sumos
+ScriptFile=/usr/share/plymouth/themes/sumos/sumos.script

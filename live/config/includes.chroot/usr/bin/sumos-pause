@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+systemctl --user stop sumos-dim.service
+notify-send SumOS 'Dim stopped. Open Agent to resume.' || true

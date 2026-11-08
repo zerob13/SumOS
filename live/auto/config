@@ -1,0 +1,30 @@
+#!/bin/sh
+set -eu
+lb config noauto \
+    --mode debian \
+    --distribution trixie \
+    --architectures amd64 \
+    --binary-images iso-hybrid \
+    --archive-areas "main" \
+    --mirror-bootstrap https://deb.debian.org/debian \
+    --mirror-chroot https://deb.debian.org/debian \
+    --mirror-binary https://deb.debian.org/debian \
+    --mirror-chroot-security https://security.debian.org/debian-security \
+    --mirror-binary-security https://security.debian.org/debian-security \
+    --apt-recommends false \
+    --apt-indices true \
+    --apt-source-archives true \
+    --firmware-binary false \
+    --firmware-chroot false \
+    --uefi-secure-boot disable \
+    --bootloaders "syslinux grub-efi" \
+    --debian-installer none \
+    --source true \
+    --source-images tar \
+    --checksums sha256 \
+    --memtest none \
+    --iso-application SumOS \
+    --iso-publisher "SumOS community" \
+    --iso-volume "SumOS Live amd64" \
+    --bootappend-live "boot=live components username=sumos hostname=sumos-live locales=en_US.UTF-8 keyboard-layouts=us quiet splash live-config.noroot" \
+    "${@}"

@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+export DIMCODE_HOME="$HOME/.dimcode"
+exec /opt/dim/bin/dimcode --home "$DIMCODE_HOME" "$@"

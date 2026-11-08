@@ -1,0 +1,8 @@
+Window.SetBackgroundTopColor(0.035, 0.06, 0.05);
+Window.SetBackgroundBottomColor(0.035, 0.06, 0.05);
+logo = Image("dim-banner.png");
+width = Math.Min(Window.GetWidth() * 0.65, 720);
+logo = logo.Scale(width, logo.GetHeight() * width / logo.GetWidth());
+sprite = Sprite(logo);
+sprite.SetX((Window.GetWidth() - logo.GetWidth()) / 2);
+sprite.SetY((Window.GetHeight() - logo.GetHeight()) / 2);

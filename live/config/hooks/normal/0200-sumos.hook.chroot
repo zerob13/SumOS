@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+# The Debian base keeps its identity and copyright files.
+cat > /etc/lsb-release <<'RELEASE'
+DISTRIB_ID=SumOS
+DISTRIB_RELEASE=0.1
+DISTRIB_CODENAME=trixie
+DISTRIB_DESCRIPTION="SumOS (Debian GNU/Linux derivative)"
+RELEASE
+printf 'SumOS · powered by Dim · based on Debian GNU/Linux 13\n' > /etc/issue
+plymouth-set-default-theme sumos
+update-initramfs -u -k all
+systemctl enable lightdm.service NetworkManager.service zramswap.service sumos-boot-check.service
+# Do not run services inside a build chroot.

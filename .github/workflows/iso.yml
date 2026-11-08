@@ -1,0 +1,105 @@
+name: Validate and release SumOS ISO
+on:
+  pull_request:
+  push:
+    branches: [master]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: iso-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck python3-tk python3-pil python3-pil.imagetk python3-qrcode xvfb xauth
+      - name: Validate GitHub Actions workflow
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -shellcheck= .github/workflows/iso.yml
+      - name: Validate scripts and real Dim integration
+        run: |
+          python3 scripts/fetch-dim.py --prefix build/staging
+          bash scripts/check.sh
+          xvfb-run -a python3 -m unittest discover -s tests -v
+        env:
+          DIM_BINARY: ${{ github.workspace }}/build/staging/opt/dim/bin/dimcode
+
+  build:
+    needs: validate
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reserve space on the disposable hosted runner
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
+          df -h .
+      - name: Install boot-test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 ovmf python3-pil
+      - name: Build Debian Live ISO and companion source archives
+        run: |
+          docker build -t sumos-builder .
+          docker run --rm --privileged -v "$PWD:/repo" sumos-builder
+          sudo chown -R "$(id -u):$(id -g)" dist build
+      - name: Boot BIOS in 4 GiB
+        run: python3 scripts/smoke-iso.py dist/sumos-amd64.iso --firmware bios
+      - name: Boot UEFI in 4 GiB
+        run: python3 scripts/smoke-iso.py dist/sumos-amd64.iso --firmware uefi
+      - name: Final checksums
+        run: |
+          python3 scripts/checksums.py
+          cd dist
+          sha256sum -c SHA256SUMS
+      - name: Upload complete release bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: sumos-amd64
+          path: dist/*
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sumos-build-diagnostics
+          path: |
+            build/live-build.log
+            dist/boot-*
+            dist/qemu-*
+          if-no-files-found: ignore
+          retention-days: 7
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: sumos-amd64
+          path: dist
+      - name: Verify and publish a prerelease with matching sources
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          cd dist
+          sha256sum -c SHA256SUMS
+          cd ..
+          gh release create "$RELEASE_TAG" dist/* --verify-tag --prerelease \
+            --title "SumOS $RELEASE_TAG · amd64 Live ISO" --notes-file docs/RELEASE_NOTES.md

@@ -1,0 +1,9 @@
+xset s off -dpms
+feh --bg-fill /usr/share/backgrounds/sumos/dim-banner.png &
+tint2 &
+nm-applet &
+lxpolkit &
+dbus-update-activation-environment --systemd DISPLAY XAUTHORITY
+systemctl --user start graphical-session.target
+systemctl --user start sumos-dim.service
+sumos-welcome &

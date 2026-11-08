@@ -1,0 +1,18 @@
+[Unit]
+Description=SumOS Dim agent runtime (current desktop user)
+PartOf=graphical-session.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=exec
+UMask=0077
+ExecStartPre=/usr/bin/mkdir -p %h/.dimcode/rust
+ExecStartPre=/usr/bin/chmod 0700 %h/.dimcode %h/.dimcode/rust
+ExecStart=/opt/dim/bin/dimcode app-server --product-home %h/.dimcode --home %h/.dimcode/rust --unix %h/.dimcode/rust/daemon.sock --no-ws --threads 2 --defaults /opt/dim/default-plugins.json
+ExecStartPost=/usr/bin/python3 /usr/lib/sumos/health.py --wait 20
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+KillMode=control-group
+Environment=MALLOC_ARENA_MAX=2

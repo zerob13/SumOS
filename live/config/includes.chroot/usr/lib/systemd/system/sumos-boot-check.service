@@ -1,0 +1,14 @@
+[Unit]
+Description=SumOS desktop and Dim readiness diagnostic
+After=display-manager.service
+Wants=display-manager.service
+ConditionPathExists=/run/live/medium
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/sumos/boot-check
+TimeoutStartSec=240
+RemainAfterExit=yes
+
+[Install]
+WantedBy=graphical.target

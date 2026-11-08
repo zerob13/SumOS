@@ -1,0 +1,22 @@
+#!/bin/sh
+# Called explicitly via the desktop after accepting Google's terms.
+set -eu
+[ "$(id -u)" -eq 0 ] || { echo 'Run with pkexec after accepting Google Chrome terms.' >&2; exit 1; }
+[ "$(dpkg --print-architecture)" = amd64 ] || { echo 'Chrome requires amd64.' >&2; exit 1; }
+if dpkg-query -W -f='${Status}' google-chrome-stable 2>/dev/null | grep -qx 'install ok installed'; then
+    echo 'Google Chrome is already installed.'
+    exit 0
+fi
+install -d -m 0755 /etc/apt/keyrings
+temporary=$(mktemp)
+trap 'rm -f "$temporary"' EXIT HUP INT TERM
+curl --fail --show-error --silent --location --proto '=https' --tlsv1.2 \
+    https://dl.google.com/linux/linux_signing_key.pub -o "$temporary"
+gpg --batch --show-keys "$temporary" >/dev/null
+install -m 0644 "$temporary" /etc/apt/keyrings/google-chrome.asc
+cat > /etc/apt/sources.list.d/google-chrome.list <<'SOURCES'
+deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.asc] https://dl.google.com/linux/chrome/deb/ stable main
+SOURCES
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends google-chrome-stable
+printf '\nChrome installed. Launch it from the desktop menu.\n'
