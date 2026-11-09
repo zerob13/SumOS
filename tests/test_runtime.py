@@ -212,7 +212,8 @@ class NativeDimFlow(unittest.TestCase):
                         provider, = (p for p in providers if p['providerId'] == PROVIDER)
                         self.assertIn('device', provider['loginMethods'])
                         self.assertFalse(client.call('account.status', {'providerId': PROVIDER}).get('account'))
-                        self.assertEqual(client.call('daemon.ping', {})['serverVersion'], '0.1.0-alpha.20')
+                        expected = json.loads((ROOT / 'versions.json').read_text())['dim']['version']
+                        self.assertEqual(client.call('daemon.ping', {})['serverVersion'], expected)
                     result = subprocess.run([str(binary), '--home', str(product), 'account', PROVIDER],
                                             capture_output=True, text=True, timeout=20)
                     self.assertEqual(result.returncode, 0, result.stderr)

@@ -54,7 +54,7 @@ def stage(cache, prefix):
             raise ValueError('Pinned Dim executable checksum differs from release manifest')
         actual_files = {str(p.relative_to(package)): hashlib.sha256(p.read_bytes()).hexdigest()
                         for p in package.rglob('*') if p.is_file()
-                        and p.name not in ('package.json', 'release-manifest.json')}
+                        and str(p.relative_to(package)) not in ('package.json', 'release-manifest.json')}
         if actual_files != manifest['files']:
             raise ValueError('Upstream file manifest mismatch')
         target = prefix / 'opt/dim'

@@ -8,7 +8,7 @@ SumOS 的发行版配置与集成代码使用 MIT；镜像内的 Linux、Debian 
 
 - Debian 13 stable / amd64，BIOS + UEFI hybrid Live ISO，内置 Debian 图形/文本磁盘安装器。
 - Openbox + X11 + tint2 + PCManFM + LXTerminal，无完整桌面元包、Firefox 或 Electron 外壳。
-- 固定版本的官方 account-enabled Dim 原生包，以普通用户的 systemd 服务运行；安装后无需登录桌面即可自启。
+- 固定版本的官方 account-enabled Dim 原生包（当前为 0.1.0-alpha.21），以普通用户的 systemd 服务运行；安装后无需登录桌面即可自启。
 - 原生 Tk 欢迎页自动申请 OAuth 设备码，显示二维码、验证码、登录进度，支持中国/全球服务、重试、离线跳过和暂停。
 - Dim 官方仓库品牌图用于 GRUB、Plymouth 和壁纸，保留出处。
 - Bash/Zsh 基础补全、Neovim、tmux、ripgrep、fd、fzf；默认不加载 LazyVim、语言服务器或本地模型。

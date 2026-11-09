@@ -2,13 +2,13 @@
   "debian": "trixie",
   "architecture": "amd64",
   "dim": {
-    "version": "0.1.0-alpha.20",
-    "url": "https://registry.npmjs.org/dimcode-linux-x64/-/dimcode-linux-x64-0.1.0-alpha.20.tgz",
-    "integrity": "sha512-9Z6Ci2Z/GabLpDxGqnEb6lAJkqSFRS8pLsMTF6wLKzZbCsujHrnNXp/cA1RQk+Ap2JuGnletpdoG4r3aT3quyw==",
-    "source_commit": "d3910d14999119c37d61d5d52139dfa29b81eab3",
-    "source_url": "https://codeload.github.com/arcships/dim/tar.gz/d3910d14999119c37d61d5d52139dfa29b81eab3",
-    "source_sha256": "ff58c543b6f738383339c5c256ca1156ad3bfacc660be5de695a253fd9080fb9",
-    "binary_sha256": "93da59c424cdc421a9079d38478c817e6226376eabdea23418140c3cbe042c3c"
+    "version": "0.1.0-alpha.21",
+    "url": "https://registry.npmjs.org/dimcode-linux-x64/-/dimcode-linux-x64-0.1.0-alpha.21.tgz",
+    "integrity": "sha512-LNqrt6rfm/0nCnDmFZ+0MMwurMv4PfCGcAZZAOXEPR0/MzLw6CAkiTThkSB4e2vuqnrprHWkK7XEXFuQ4whewg==",
+    "source_commit": "0423b321abc923900525d79d030fd690110f91c4",
+    "source_url": "https://codeload.github.com/arcships/dim/tar.gz/0423b321abc923900525d79d030fd690110f91c4",
+    "source_sha256": "bd4de76020e2231093401451d301fb46ea8b21a595cd5f2e638f322f3813ab97",
+    "binary_sha256": "9fec807b8a4aad42995a334c65a865b6dadde264ed098af11323c5bc074f968a"
   },
   "branding": {
     "source_commit": "975ef55dd5cade0d08bdd4828454b9490da32ba8",
