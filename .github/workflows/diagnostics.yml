@@ -1,40 +1,17 @@
-name: Inspect ISO build diagnostics
+name: Check ISO test hardware acceleration
 on:
   push:
     branches: [ci/active-logs]
-  workflow_dispatch:
-    inputs:
-      run_id:
-        description: 'ISO workflow run ID (empty selects the latest failed run)'
-        required: false
-        type: string
 permissions:
   contents: read
-  actions: read
 jobs:
   inspect:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Try reading the active build log with the runner's read-only token
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Check whether QEMU can use KVM without elevated permissions
         run: |
-          mkdir -p diagnostics
-          gh run view 42504941035 --log-failed > diagnostics/active-build.log 2>&1 || true
-          tail -n 8 diagnostics/active-build.log > diagnostics/last-lines.log
-          python3 scripts/ci-diagnostics.py diagnostics/last-lines.log
-      - name: Download retained diagnostics and surface the failure
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          DIAG_RUN_ID: ${{ inputs.run_id }}
-        run: |
-          if [[ -z "$DIAG_RUN_ID" ]]; then
-            DIAG_RUN_ID=$(gh run list --workflow iso.yml --status failure --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [[ -r /dev/kvm && -w /dev/kvm ]]; then
+            echo '::notice::KVM is accessible to the runner user'
+          else
+            echo '::notice::KVM is unavailable to the runner user; software emulation is required'
           fi
-          [[ "$DIAG_RUN_ID" =~ ^[0-9]+$ ]] || { echo 'No failed ISO run found'; exit 1; }
-          echo "Inspecting run $DIAG_RUN_ID"
-          gh run download "$DIAG_RUN_ID" --name sumos-build-diagnostics --dir diagnostics
-          find diagnostics -type f -name '*.log' -print0 | xargs -0 -r python3 scripts/ci-diagnostics.py
-          python3 scripts/ci-image-diagnostics.py diagnostics
