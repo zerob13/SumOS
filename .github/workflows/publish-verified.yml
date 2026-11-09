@@ -1,0 +1,120 @@
+name: Publish SumOS with Dim 0.1.0-alpha.21
+on:
+  push:
+    branches: [ci/publish-alpha21]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: zerob13/SumOS
+      VERIFIED_RUN: '42607337256'
+      VERIFIED_SHA: 53f1190aa9979dfba543f08ee41422c411d3b93a
+      RELEASE_TAG: v0.1.0-preview.2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Require the exact successful master ISO workflow
+        run: |
+          gh api "repos/$GH_REPO/actions/runs/$VERIFIED_RUN" > /tmp/verified-run.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          run = json.loads(Path('/tmp/verified-run.json').read_text())
+          expected = {
+              'head_sha': os.environ['VERIFIED_SHA'],
+              'head_branch': 'master',
+              'event': 'push',
+              'path': '.github/workflows/iso.yml',
+              'status': 'completed',
+              'conclusion': 'success',
+          }
+          for key, value in expected.items():
+              if run.get(key) != value:
+                  raise SystemExit(f'Unverified workflow: {key} does not match')
+          if run['head_repository']['full_name'] != os.environ['GH_REPO']:
+              raise SystemExit('Unexpected source repository')
+          print('Exact successful BIOS/UEFI Live and disk-install workflow verified')
+          PY
+      - name: Download and verify the tested ISO and all corresponding sources
+        run: |
+          gh run download "$VERIFIED_RUN" --name sumos-amd64 --dir dist
+          (cd dist && sha256sum -c SHA256SUMS)
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          out = Path('dist')
+          manifest = json.loads((out / 'build-manifest.json').read_text())
+          if manifest['sumosCommit'] != os.environ['VERIFIED_SHA'] or manifest['dirty']:
+              raise SystemExit('Artifact source identity does not match the verified commit')
+          if manifest['versions'] != json.loads(Path('versions.json').read_text()):
+              raise SystemExit('Version pins do not match the verified source')
+          required = ['sumos-amd64.iso', 'sumos-source.tar.gz', 'dim-source.tar.gz',
+                      'LICENSING.md', 'DIM-NOTICE', 'LICENSE', 'versions.json', 'SHA256SUMS']
+          for name in required:
+              if not (out / name).is_file():
+                  raise SystemExit(f'Missing release component: {name}')
+          for name in manifest['debianSources']:
+              parts = sorted(out.glob(name + '.part*'))
+              if not parts or any(p.name != f'{name}.part{i:03d}' for i, p in enumerate(parts)):
+                  raise SystemExit(f'Missing or non-contiguous source archive: {name}')
+          if not any('-source.debian.' in n for n in manifest['debianSources']):
+              raise SystemExit('Missing Debian sources')
+          if not any('-source.live.' in n for n in manifest['debianSources']):
+              raise SystemExit('Missing live-build sources')
+          print('Manifest, version pins, source archives and checksums verified')
+          PY
+          python3 scripts/checksums.py
+          (cd dist && sha256sum -c SHA256SUMS)
+      - name: Stage every asset before publishing the prerelease
+        run: |
+          cat > /tmp/sumos-release-notes.md <<'NOTES'
+          可安装的 SumOS amd64 预览版，内置 Dim 0.1.0-alpha.21，适用于普通 x86-64 电脑。
+
+          下载 `sumos-amd64.iso` 并校验 `SHA256SUMS`，写入 U 盘后选择 **Install SumOS (graphical)**。
+          安装器会要求确认分区并创建个人账号；移除 U 盘后从硬盘启动。
+          Dim 以该账号开机常驻，无需先登录桌面；桌面欢迎页提供二维码登录，也可通过 SSH 使用。
+
+          BIOS / UEFI Live 启动、空白磁盘安装、移除 ISO 后两次硬盘启动、Dim 登录前就绪、账号与文件持久化均已通过 CI。
+          验证记录：https://github.com/zerob13/SumOS/actions/runs/42607337256
+          此预览版不支持 Secure Boot；实际硬件驱动兼容性仍需试装确认。
+
+          下方源码分卷、许可证和校验文件对应这份 ISO，重新分发时请一起保留。
+
+          NOTES
+          cat docs/RELEASE_NOTES.md >> /tmp/sumos-release-notes.md
+          if actual_sha=$(gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null); then
+            [[ "$actual_sha" == "$VERIFIED_SHA" ]] || { echo '::error::Release tag does not match the tested commit'; exit 1; }
+          else
+            gh api "repos/$GH_REPO/git/refs" --method POST \
+              -f "ref=refs/tags/$RELEASE_TAG" -f "sha=$VERIFIED_SHA" > /dev/null
+          fi
+          if draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft 2>/dev/null); then
+            [[ "$draft" == true ]] || { echo '::error::Only our unpublished staging release can be replaced'; exit 1; }
+            gh release delete "$RELEASE_TAG" --yes
+          fi
+          if ! gh release create "$RELEASE_TAG" dist/* --verify-tag --draft --prerelease \
+            --title "SumOS $RELEASE_TAG · installable amd64 ISO" \
+            --notes-file /tmp/sumos-release-notes.md 2> /tmp/release-upload-error; then
+            python3 - <<'PY'
+          from pathlib import Path
+          error = Path('/tmp/release-upload-error').read_text()[-1800:]
+          print('::error::' + error.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
+          PY
+            exit 1
+          fi
+          gh release view "$RELEASE_TAG" --json assets --jq '.assets | map({name, size})' > /tmp/staged-assets.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          expected = {p.name: p.stat().st_size for p in Path('dist').iterdir()}
+          actual = {p['name']: p['size'] for p in json.loads(Path('/tmp/staged-assets.json').read_text())}
+          if actual != expected:
+              raise SystemExit('::error::Release assets are incomplete; retaining the private draft')
+          print(f'All {len(expected)} assets staged with the expected sizes')
+          PY
+          gh release edit "$RELEASE_TAG" --draft=false --prerelease
